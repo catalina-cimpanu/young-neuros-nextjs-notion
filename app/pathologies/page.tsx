@@ -1,15 +1,59 @@
+import { getPublishedTopics } from "@/lib/topics";
+
+// Re-fetch Notion data at most once per hour (3600 seconds).
+export const revalidate = 3600;
+
 /**
- * Renders the pathologies placeholder page.
- * Notion data will be added in a later step.
+ * Renders published Pathology topics from Notion.
+ * Filters getPublishedTopics() down to Topic type = Pathology.
  */
-export default function PathologiesPage() {
+export default async function PathologiesPage() {
+  const topics = await getPublishedTopics();
+
+  // Keep only topics marked as Pathology in Notion.
+  const pathologies = topics.filter((topic) => {
+    return topic.topicType === "Pathology";
+  });
+
   return (
     <main className="homepage">
       <h1>Pathologies</h1>
       <p className="homepage-subtitle">
-        Neurology topics focused on diseases and clinical conditions. Content
-        from Notion will appear here soon.
+        Neurology topics focused on diseases and clinical conditions.
       </p>
+
+      {pathologies.length === 0 ? (
+        <p className="mt-8 text-neutral-600">
+          No published pathologies yet. Add one in Notion with Status =
+          Published and Topic type = Pathology.
+        </p>
+      ) : (
+        <ul className="mt-8 list-none space-y-6 p-0">
+          {pathologies.map((pathology) => (
+            <li key={pathology.id} className="border-b border-neutral-200 pb-4">
+              <h2 className="text-xl font-semibold">{pathology.name}</h2>
+
+              {pathology.shortDescription ? (
+                <p className="mt-2 text-neutral-700">
+                  {pathology.shortDescription}
+                </p>
+              ) : null}
+
+              {pathology.residencyRelevance ? (
+                <p className="mt-2 text-sm text-neutral-500">
+                  Residency relevance: {pathology.residencyRelevance}
+                </p>
+              ) : null}
+
+              {pathology.lastReviewed ? (
+                <p className="mt-1 text-sm text-neutral-500">
+                  Last reviewed: {pathology.lastReviewed}
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
