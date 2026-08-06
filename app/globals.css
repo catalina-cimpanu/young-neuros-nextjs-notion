@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
+/* Base colors for the whole site */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --muted: #525252;
+  --link: #1d4ed8;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+/* Homepage layout — kept simple on purpose for Step 1 */
+.homepage {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.homepage h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.homepage-subtitle {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+.homepage-nav {
+  margin-top: 2.5rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.homepage-nav a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.homepage-nav a:hover {
+  text-decoration: none;
 }
