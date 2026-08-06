@@ -1,3 +1,4 @@
+import TopicCard from "@/components/TopicCard";
 import { getPublishedTopics } from "@/lib/topics";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -30,27 +31,13 @@ export default async function PathologiesPage() {
       ) : (
         <ul className="mt-8 list-none space-y-6 p-0">
           {pathologies.map((pathology) => (
-            <li key={pathology.id} className="border-b border-neutral-200 pb-4">
-              <h2 className="text-xl font-semibold">{pathology.name}</h2>
-
-              {pathology.shortDescription ? (
-                <p className="mt-2 text-neutral-700">
-                  {pathology.shortDescription}
-                </p>
-              ) : null}
-
-              {pathology.residencyRelevance ? (
-                <p className="mt-2 text-sm text-neutral-500">
-                  Residency relevance: {pathology.residencyRelevance}
-                </p>
-              ) : null}
-
-              {pathology.lastReviewed ? (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Last reviewed: {pathology.lastReviewed}
-                </p>
-              ) : null}
-            </li>
+            <TopicCard
+              key={pathology.id}
+              name={pathology.name}
+              shortDescription={pathology.shortDescription}
+              residencyRelevance={pathology.residencyRelevance}
+              lastReviewed={pathology.lastReviewed}
+            />
           ))}
         </ul>
       )}

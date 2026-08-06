@@ -1,3 +1,4 @@
+import TopicCard from "@/components/TopicCard";
 import { getPublishedTopics } from "@/lib/topics";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -31,27 +32,13 @@ export default async function NeuroskillsPage() {
       ) : (
         <ul className="mt-8 list-none space-y-6 p-0">
           {neuroskills.map((neuroskill) => (
-            <li key={neuroskill.id} className="border-b border-neutral-200 pb-4">
-              <h2 className="text-xl font-semibold">{neuroskill.name}</h2>
-
-              {neuroskill.shortDescription ? (
-                <p className="mt-2 text-neutral-700">
-                  {neuroskill.shortDescription}
-                </p>
-              ) : null}
-
-              {neuroskill.residencyRelevance ? (
-                <p className="mt-2 text-sm text-neutral-500">
-                  Residency relevance: {neuroskill.residencyRelevance}
-                </p>
-              ) : null}
-
-              {neuroskill.lastReviewed ? (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Last reviewed: {neuroskill.lastReviewed}
-                </p>
-              ) : null}
-            </li>
+            <TopicCard
+              key={neuroskill.id}
+              name={neuroskill.name}
+              shortDescription={neuroskill.shortDescription}
+              residencyRelevance={neuroskill.residencyRelevance}
+              lastReviewed={neuroskill.lastReviewed}
+            />
           ))}
         </ul>
       )}
