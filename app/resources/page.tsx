@@ -1,4 +1,5 @@
-import ResourceCard from "@/components/ResourceCard";
+import { Suspense } from "react";
+import ResourcesList from "@/components/ResourcesList";
 import { getPublishedResources } from "@/lib/resources";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -6,7 +7,7 @@ export const revalidate = 3600;
 
 /**
  * Renders published Neuro Resources from Notion.
- * Each resource links out to its external URL (no detail page).
+ * Grouping and filters live in the client ResourcesList component.
  */
 export default async function ResourcesPage() {
   const resources = await getPublishedResources();
@@ -23,23 +24,12 @@ export default async function ResourcesPage() {
           No published resources yet. Add one in Notion with Status = Published.
         </p>
       ) : (
-        <ul className="mt-8 list-none space-y-6 p-0">
-          {resources.map((resource) => (
-            <ResourceCard
-              key={resource.id}
-              name={resource.name}
-              url={resource.url}
-              resourceType={resource.resourceType}
-              audience={resource.audience}
-              language={resource.language}
-              sourceQuality={resource.sourceQuality}
-              description={resource.description}
-              whyUseful={resource.whyUseful}
-              lastChecked={resource.lastChecked}
-              topicNames={resource.topicNames}
-            />
-          ))}
-        </ul>
+        // Suspense is required around useSearchParams() in the client list.
+        <Suspense
+          fallback={<p className="mt-8 text-neutral-600">Loading filters…</p>}
+        >
+          <ResourcesList resources={resources} />
+        </Suspense>
       )}
     </main>
   );

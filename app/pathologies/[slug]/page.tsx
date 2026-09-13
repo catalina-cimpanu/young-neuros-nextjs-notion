@@ -7,6 +7,7 @@ import {
 } from "@/lib/guidelines";
 import { groupGuidelinesByRegion } from "@/lib/guideline-groups";
 import { getPublishedResourcesForTopic } from "@/lib/resources";
+import { groupResourcesByType } from "@/lib/resource-groups";
 import { getPublishedTopicBySlug } from "@/lib/topics";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -49,6 +50,9 @@ export default async function PathologyTopicPage({
 
   // Topic pages: group guidelines by region only (filters stay on /guidelines).
   const guidelineRegionGroups = groupGuidelinesByRegion(guidelines);
+
+  // Topic pages: group non-Link resources by type (filters stay on /resources).
+  const resourceTypeGroups = groupResourcesByType(resources);
 
   return (
     <main className="homepage">
@@ -131,24 +135,35 @@ export default async function PathologyTopicPage({
             No published resources linked to this topic yet.
           </p>
         ) : (
-          <ul className="mt-4 list-none space-y-4 p-0">
-            {resources.map((resource) => (
-              <ResourceCard
-                key={resource.id}
-                name={resource.name}
-                url={resource.url}
-                resourceType={resource.resourceType}
-                audience={resource.audience}
-                language={resource.language}
-                sourceQuality={resource.sourceQuality}
-                description={resource.description}
-                whyUseful={resource.whyUseful}
-                lastChecked={resource.lastChecked}
-                // On a topic page the topic is already clear, so hide Topics here.
-                topicNames={[]}
-              />
+          <div className="mt-4 space-y-8">
+            {resourceTypeGroups.map((typeGroup) => (
+              <div key={typeGroup.typeLabel}>
+                <h3 className="text-base font-semibold text-neutral-800">
+                  {typeGroup.typeLabel}
+                </h3>
+
+                <ul className="mt-3 list-none space-y-4 p-0">
+                  {typeGroup.resources.map((resource) => (
+                    <ResourceCard
+                      key={resource.id}
+                      name={resource.name}
+                      url={resource.url}
+                      // Type is already the subsection heading.
+                      resourceType=""
+                      audience={resource.audience}
+                      language={resource.language}
+                      sourceQuality={resource.sourceQuality}
+                      description={resource.description}
+                      whyUseful={resource.whyUseful}
+                      lastChecked={resource.lastChecked}
+                      // On a topic page the topic is already clear, so hide Topics here.
+                      topicNames={[]}
+                    />
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
