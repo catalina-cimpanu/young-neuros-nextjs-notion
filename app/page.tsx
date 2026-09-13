@@ -180,7 +180,11 @@ export default async function Home() {
             {recentArticles.map((article) => (
               <li key={article.id}>
                 <Link
-                  href="/articles"
+                  href={
+                    article.slug !== ""
+                      ? `/articles/${article.slug}`
+                      : "/articles"
+                  }
                   className="font-medium text-blue-700 underline hover:no-underline"
                 >
                   {article.title}
