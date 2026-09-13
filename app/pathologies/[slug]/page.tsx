@@ -9,7 +9,8 @@ export const revalidate = 3600;
 
 /**
  * Renders one published Pathology topic by slug.
- * Also shows related published resources and guidelines for that topic.
+ * Shows three related sections, matching the old site layout:
+ * Guidelines, Resources, and Links (Links = Resource type "Link" in Notion).
  * Example URL: /pathologies/multiple-sclerosis
  */
 export default async function PathologyTopicPage({
@@ -26,10 +27,20 @@ export default async function PathologyTopicPage({
   }
 
   // Load related CMS items in parallel after we know the topic id.
-  const [resources, guidelines] = await Promise.all([
+  const [allResources, guidelines] = await Promise.all([
     getPublishedResourcesForTopic(topic.id),
     getPublishedGuidelinesForTopic(topic.id),
   ]);
+
+  // In Notion, Links are stored in Neuro Resources with Resource type = Link.
+  const links = allResources.filter((resource) => {
+    return resource.resourceType === "Link";
+  });
+
+  // Everything else from Neuro Resources stays under Resources.
+  const resources = allResources.filter((resource) => {
+    return resource.resourceType !== "Link";
+  });
 
   return (
     <main className="homepage">
@@ -60,9 +71,9 @@ export default async function PathologyTopicPage({
         </p>
       ) : null}
 
-<section className="mt-10" aria-labelledby="guidelines-heading">
+      <section className="mt-10" aria-labelledby="guidelines-heading">
         <h2 id="guidelines-heading" className="text-lg font-semibold">
-          Related guidelines
+          Guidelines
         </h2>
 
         {guidelines.length === 0 ? (
@@ -109,7 +120,7 @@ export default async function PathologyTopicPage({
 
       <section className="mt-10" aria-labelledby="resources-heading">
         <h2 id="resources-heading" className="text-lg font-semibold">
-          Related resources
+          Resources
         </h2>
 
         {resources.length === 0 ? (
@@ -133,6 +144,12 @@ export default async function PathologyTopicPage({
                   <span className="font-medium">{resource.name}</span>
                 )}
 
+                {resource.resourceType ? (
+                  <p className="mt-1 text-sm text-neutral-500">
+                    Type: {resource.resourceType}
+                  </p>
+                ) : null}
+
                 {resource.description ? (
                   <p className="mt-1 text-sm text-neutral-700">
                     {resource.description}
@@ -144,6 +161,42 @@ export default async function PathologyTopicPage({
         )}
       </section>
 
+      <section className="mt-10" aria-labelledby="links-heading">
+        <h2 id="links-heading" className="text-lg font-semibold">
+          Links
+        </h2>
+
+        {links.length === 0 ? (
+          <p className="mt-3 text-neutral-600">
+            No published links linked to this topic yet.
+          </p>
+        ) : (
+          <ul className="mt-4 list-none space-y-4 p-0">
+            {links.map((linkItem) => (
+              <li key={linkItem.id} className="border-b border-neutral-200 pb-3">
+                {linkItem.url ? (
+                  <a
+                    href={linkItem.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-700 underline hover:no-underline"
+                  >
+                    {linkItem.name}
+                  </a>
+                ) : (
+                  <span className="font-medium">{linkItem.name}</span>
+                )}
+
+                {linkItem.description ? (
+                  <p className="mt-1 text-sm text-neutral-700">
+                    {linkItem.description}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }
