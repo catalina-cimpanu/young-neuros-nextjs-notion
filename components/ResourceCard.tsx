@@ -1,4 +1,20 @@
 /**
+ * Joins several labels into one readable string, e.g. "Resident, Specialist".
+ * Empty or blank values are skipped.
+ */
+function joinLabels(values: string[]): string {
+  const cleanedValues: string[] = [];
+
+  for (const value of values) {
+    if (value.trim() !== "") {
+      cleanedValues.push(value);
+    }
+  }
+
+  return cleanedValues.join(", ");
+}
+
+/**
  * Props for one resource list item.
  * Kept as separate fields so the UI stays easy to read.
  */
@@ -6,12 +22,15 @@ type ResourceCardProps = {
   name: string;
   url: string;
   resourceType: string;
-  audience: string;
+  // Audience is multi-select in Notion — pass every selected value.
+  audience: string[];
   language: string;
   sourceQuality: string;
   description: string;
   whyUseful: string;
   lastChecked: string | null;
+  // A resource can relate to several topics — show every name.
+  topicNames: string[];
 };
 
 /**
@@ -29,7 +48,11 @@ export default function ResourceCard({
   description,
   whyUseful,
   lastChecked,
+  topicNames,
 }: ResourceCardProps) {
+  const audienceLabel = joinLabels(audience);
+  const topicsLabel = joinLabels(topicNames);
+
   return (
     <li className="border-b border-neutral-200 pb-4">
       {/* External link opens in a new tab so the user does not leave our site by accident. */}
@@ -50,8 +73,10 @@ export default function ResourceCard({
         <p className="mt-2 text-sm text-neutral-500">Type: {resourceType}</p>
       ) : null}
 
-      {audience ? (
-        <p className="mt-1 text-sm text-neutral-500">Audience: {audience}</p>
+      {audienceLabel ? (
+        <p className="mt-1 text-sm text-neutral-500">
+          Audience: {audienceLabel}
+        </p>
       ) : null}
 
       {language ? (
@@ -62,6 +87,10 @@ export default function ResourceCard({
         <p className="mt-1 text-sm text-neutral-500">
           Source quality: {sourceQuality}
         </p>
+      ) : null}
+
+      {topicsLabel ? (
+        <p className="mt-1 text-sm text-neutral-500">Topics: {topicsLabel}</p>
       ) : null}
 
       {description ? (

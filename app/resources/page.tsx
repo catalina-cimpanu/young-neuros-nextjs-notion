@@ -36,6 +36,7 @@ export default async function ResourcesPage() {
               description={resource.description}
               whyUseful={resource.whyUseful}
               lastChecked={resource.lastChecked}
+              topicNames={resource.topicNames}
             />
           ))}
         </ul>

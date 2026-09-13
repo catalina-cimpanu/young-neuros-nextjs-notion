@@ -96,6 +96,8 @@ export default async function NeuroskillTopicPage({
                 guidelineType={guideline.guidelineType}
                 summary={guideline.summary}
                 lastReviewed={guideline.lastReviewed}
+                // On a topic page the topic is already clear, so hide Topics here.
+                topicNames={[]}
               />
             ))}
           </ul>
@@ -125,6 +127,8 @@ export default async function NeuroskillTopicPage({
                 description={resource.description}
                 whyUseful={resource.whyUseful}
                 lastChecked={resource.lastChecked}
+                // On a topic page the topic is already clear, so hide Topics here.
+                topicNames={[]}
               />
             ))}
           </ul>

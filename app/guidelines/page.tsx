@@ -37,6 +37,7 @@ export default async function GuidelinesPage() {
               guidelineType={guideline.guidelineType}
               summary={guideline.summary}
               lastReviewed={guideline.lastReviewed}
+              topicNames={guideline.topicNames}
             />
           ))}
         </ul>

@@ -1,4 +1,20 @@
 /**
+ * Joins several labels into one readable string, e.g. "Resident, Specialist".
+ * Empty or blank values are skipped.
+ */
+function joinLabels(values: string[]): string {
+  const cleanedValues: string[] = [];
+
+  for (const value of values) {
+    if (value.trim() !== "") {
+      cleanedValues.push(value);
+    }
+  }
+
+  return cleanedValues.join(", ");
+}
+
+/**
  * Props for one guideline list item.
  * Kept as separate fields so the UI stays easy to read.
  */
@@ -12,6 +28,8 @@ type GuidelineCardProps = {
   guidelineType: string;
   summary: string;
   lastReviewed: string | null;
+  // A guideline can relate to several topics — show every name.
+  topicNames: string[];
 };
 
 /**
@@ -29,7 +47,10 @@ export default function GuidelineCard({
   guidelineType,
   summary,
   lastReviewed,
+  topicNames,
 }: GuidelineCardProps) {
+  const topicsLabel = joinLabels(topicNames);
+
   return (
     <li className="border-b border-neutral-200 pb-4">
       {/* External link opens in a new tab so the user does not leave our site by accident. */}
@@ -66,6 +87,10 @@ export default function GuidelineCard({
 
       {guidelineType ? (
         <p className="mt-1 text-sm text-neutral-500">Type: {guidelineType}</p>
+      ) : null}
+
+      {topicsLabel ? (
+        <p className="mt-1 text-sm text-neutral-500">Topics: {topicsLabel}</p>
       ) : null}
 
       {summary ? <p className="mt-2 text-neutral-700">{summary}</p> : null}
