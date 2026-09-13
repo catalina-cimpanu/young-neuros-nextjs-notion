@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import GuidelineCard from "@/components/GuidelineCard";
+import ResourceCard from "@/components/ResourceCard";
 import { getPublishedGuidelinesForTopic } from "@/lib/guidelines";
 import { getPublishedResourcesForTopic } from "@/lib/resources";
 import { getPublishedTopicBySlug } from "@/lib/topics";
@@ -83,36 +85,18 @@ export default async function NeuroskillTopicPage({
         ) : (
           <ul className="mt-4 list-none space-y-4 p-0">
             {guidelines.map((guideline) => (
-              <li
+              <GuidelineCard
                 key={guideline.id}
-                className="border-b border-neutral-200 pb-3"
-              >
-                {guideline.url ? (
-                  <a
-                    href={guideline.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-700 underline hover:no-underline"
-                  >
-                    {guideline.name}
-                  </a>
-                ) : (
-                  <span className="font-medium">{guideline.name}</span>
-                )}
-
-                {guideline.organization ? (
-                  <p className="mt-1 text-sm text-neutral-500">
-                    {guideline.organization}
-                    {guideline.year !== null ? ` · ${guideline.year}` : ""}
-                  </p>
-                ) : null}
-
-                {guideline.summary ? (
-                  <p className="mt-1 text-sm text-neutral-700">
-                    {guideline.summary}
-                  </p>
-                ) : null}
-              </li>
+                name={guideline.name}
+                url={guideline.url}
+                organization={guideline.organization}
+                region={guideline.region}
+                language={guideline.language}
+                year={guideline.year}
+                guidelineType={guideline.guidelineType}
+                summary={guideline.summary}
+                lastReviewed={guideline.lastReviewed}
+              />
             ))}
           </ul>
         )}
@@ -130,32 +114,18 @@ export default async function NeuroskillTopicPage({
         ) : (
           <ul className="mt-4 list-none space-y-4 p-0">
             {resources.map((resource) => (
-              <li key={resource.id} className="border-b border-neutral-200 pb-3">
-                {resource.url ? (
-                  <a
-                    href={resource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-700 underline hover:no-underline"
-                  >
-                    {resource.name}
-                  </a>
-                ) : (
-                  <span className="font-medium">{resource.name}</span>
-                )}
-
-                {resource.resourceType ? (
-                  <p className="mt-1 text-sm text-neutral-500">
-                    Type: {resource.resourceType}
-                  </p>
-                ) : null}
-
-                {resource.description ? (
-                  <p className="mt-1 text-sm text-neutral-700">
-                    {resource.description}
-                  </p>
-                ) : null}
-              </li>
+              <ResourceCard
+                key={resource.id}
+                name={resource.name}
+                url={resource.url}
+                resourceType={resource.resourceType}
+                audience={resource.audience}
+                language={resource.language}
+                sourceQuality={resource.sourceQuality}
+                description={resource.description}
+                whyUseful={resource.whyUseful}
+                lastChecked={resource.lastChecked}
+              />
             ))}
           </ul>
         )}

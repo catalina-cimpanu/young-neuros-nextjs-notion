@@ -1,3 +1,4 @@
+import ResourceCard from "@/components/ResourceCard";
 import { getPublishedResources } from "@/lib/resources";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -24,60 +25,18 @@ export default async function ResourcesPage() {
       ) : (
         <ul className="mt-8 list-none space-y-6 p-0">
           {resources.map((resource) => (
-            <li key={resource.id} className="border-b border-neutral-200 pb-4">
-              {resource.url ? (
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xl font-semibold text-blue-700 underline hover:no-underline"
-                >
-                  {resource.name}
-                </a>
-              ) : (
-                <h2 className="text-xl font-semibold">{resource.name}</h2>
-              )}
-
-              {resource.resourceType ? (
-                <p className="mt-2 text-sm text-neutral-500">
-                  Type: {resource.resourceType}
-                </p>
-              ) : null}
-
-              {resource.description ? (
-                <p className="mt-2 text-neutral-700">{resource.description}</p>
-              ) : null}
-
-              {resource.whyUseful ? (
-                <p className="mt-2 text-neutral-700">
-                  Why useful: {resource.whyUseful}
-                </p>
-              ) : null}
-
-              {resource.audience ? (
-                <p className="mt-2 text-sm text-neutral-500">
-                  Audience: {resource.audience}
-                </p>
-              ) : null}
-
-              {resource.language ? (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Language: {resource.language}
-                </p>
-              ) : null}
-
-              {resource.sourceQuality ? (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Source quality: {resource.sourceQuality}
-                </p>
-              ) : null}
-
-              {resource.lastChecked ? (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Last checked: {resource.lastChecked}
-                </p>
-              ) : null}
-            </li>
+            <ResourceCard
+              key={resource.id}
+              name={resource.name}
+              url={resource.url}
+              resourceType={resource.resourceType}
+              audience={resource.audience}
+              language={resource.language}
+              sourceQuality={resource.sourceQuality}
+              description={resource.description}
+              whyUseful={resource.whyUseful}
+              lastChecked={resource.lastChecked}
+            />
           ))}
         </ul>
       )}
