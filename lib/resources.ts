@@ -257,3 +257,55 @@ export async function getPublishedResources(): Promise<Resource[]> {
 
   return resources;
 }
+
+/**
+ * Fetches published Neuro Resources linked to one Neuro Topic.
+ * Uses the Topics relation and Status = Published.
+ */
+export async function getPublishedResourcesForTopic(
+  topicId: string,
+): Promise<Resource[]> {
+  const dataSourceId = await getResourcesDataSourceId();
+
+  const resources: Resource[] = [];
+  let cursor: string | undefined = undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      start_cursor: cursor,
+      filter: {
+        and: [
+          {
+            property: "Status",
+            status: {
+              equals: "Published",
+            },
+          },
+          {
+            property: "Topics",
+            relation: {
+              contains: topicId,
+            },
+          },
+        ],
+      },
+    });
+
+    for (const result of response.results) {
+      if (isFullPage(result)) {
+        resources.push(mapNotionPageToResource(result));
+      }
+    }
+
+    hasMore = response.has_more;
+    if (response.next_cursor) {
+      cursor = response.next_cursor;
+    } else {
+      cursor = undefined;
+    }
+  }
+
+  return resources;
+}

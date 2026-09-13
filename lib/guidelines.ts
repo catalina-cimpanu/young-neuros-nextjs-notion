@@ -253,3 +253,55 @@ export async function getPublishedGuidelines(): Promise<Guideline[]> {
 
   return guidelines;
 }
+
+/**
+ * Fetches published Neuro Guidelines linked to one Neuro Topic.
+ * Uses the Topics relation and Status = Published.
+ */
+export async function getPublishedGuidelinesForTopic(
+  topicId: string,
+): Promise<Guideline[]> {
+  const dataSourceId = await getGuidelinesDataSourceId();
+
+  const guidelines: Guideline[] = [];
+  let cursor: string | undefined = undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      start_cursor: cursor,
+      filter: {
+        and: [
+          {
+            property: "Status",
+            status: {
+              equals: "Published",
+            },
+          },
+          {
+            property: "Topics",
+            relation: {
+              contains: topicId,
+            },
+          },
+        ],
+      },
+    });
+
+    for (const result of response.results) {
+      if (isFullPage(result)) {
+        guidelines.push(mapNotionPageToGuideline(result));
+      }
+    }
+
+    hasMore = response.has_more;
+    if (response.next_cursor) {
+      cursor = response.next_cursor;
+    } else {
+      cursor = undefined;
+    }
+  }
+
+  return guidelines;
+}

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getPublishedGuidelinesForTopic } from "@/lib/guidelines";
+import { getPublishedResourcesForTopic } from "@/lib/resources";
 import { getPublishedTopicBySlug } from "@/lib/topics";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
@@ -7,6 +9,7 @@ export const revalidate = 3600;
 
 /**
  * Renders one published Neuroskill topic by slug.
+ * Also shows related published resources and guidelines for that topic.
  * Example URL: /neuroskills/eeg
  */
 export default async function NeuroskillTopicPage({
@@ -21,6 +24,12 @@ export default async function NeuroskillTopicPage({
   if (!topic || topic.topicType !== "Neuroskill") {
     notFound();
   }
+
+  // Load related CMS items in parallel after we know the topic id.
+  const [resources, guidelines] = await Promise.all([
+    getPublishedResourcesForTopic(topic.id),
+    getPublishedGuidelinesForTopic(topic.id),
+  ]);
 
   return (
     <main className="homepage">
@@ -50,6 +59,91 @@ export default async function NeuroskillTopicPage({
           Last reviewed: {topic.lastReviewed}
         </p>
       ) : null}
+
+<section className="mt-10" aria-labelledby="guidelines-heading">
+        <h2 id="guidelines-heading" className="text-lg font-semibold">
+          Related guidelines
+        </h2>
+
+        {guidelines.length === 0 ? (
+          <p className="mt-3 text-neutral-600">
+            No published guidelines linked to this topic yet.
+          </p>
+        ) : (
+          <ul className="mt-4 list-none space-y-4 p-0">
+            {guidelines.map((guideline) => (
+              <li
+                key={guideline.id}
+                className="border-b border-neutral-200 pb-3"
+              >
+                {guideline.url ? (
+                  <a
+                    href={guideline.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-700 underline hover:no-underline"
+                  >
+                    {guideline.name}
+                  </a>
+                ) : (
+                  <span className="font-medium">{guideline.name}</span>
+                )}
+
+                {guideline.organization ? (
+                  <p className="mt-1 text-sm text-neutral-500">
+                    {guideline.organization}
+                    {guideline.year !== null ? ` · ${guideline.year}` : ""}
+                  </p>
+                ) : null}
+
+                {guideline.summary ? (
+                  <p className="mt-1 text-sm text-neutral-700">
+                    {guideline.summary}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-10" aria-labelledby="resources-heading">
+        <h2 id="resources-heading" className="text-lg font-semibold">
+          Related resources
+        </h2>
+
+        {resources.length === 0 ? (
+          <p className="mt-3 text-neutral-600">
+            No published resources linked to this topic yet.
+          </p>
+        ) : (
+          <ul className="mt-4 list-none space-y-4 p-0">
+            {resources.map((resource) => (
+              <li key={resource.id} className="border-b border-neutral-200 pb-3">
+                {resource.url ? (
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-700 underline hover:no-underline"
+                  >
+                    {resource.name}
+                  </a>
+                ) : (
+                  <span className="font-medium">{resource.name}</span>
+                )}
+
+                {resource.description ? (
+                  <p className="mt-1 text-sm text-neutral-700">
+                    {resource.description}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
     </main>
   );
 }
