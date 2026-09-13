@@ -1,23 +1,7 @@
 import type { ReactNode } from "react";
 import type { RichTextItemResponse } from "@notionhq/client";
+import { headingIdFromText } from "@/components/ArticleContents";
 import type { ArticleBlock } from "@/lib/articles";
-
-/**
- * Turns heading text into a URL-friendly id for in-page links / future TOC.
- */
-function headingIdFromText(text: string): string {
-  const slug = text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  if (slug === "") {
-    return "section";
-  }
-
-  return slug;
-}
 
 /**
  * Renders Notion rich text (bold, italic, code, links) as React nodes.

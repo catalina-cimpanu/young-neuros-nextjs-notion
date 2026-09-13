@@ -19,6 +19,8 @@ export type Article = {
   author: string;
   publishedDate: string | null;
   lastReviewed: string | null;
+  // Tags is a multi-select in Notion.
+  tags: string[];
 };
 
 /**
@@ -157,6 +159,26 @@ function getDateProperty(
 }
 
 /**
+ * Reads a multi-select property as a list of option names.
+ */
+function getMultiSelectNames(
+  properties: PageObjectResponse["properties"],
+  propertyName: string,
+): string[] {
+  const property = properties[propertyName];
+
+  if (!property) {
+    return [];
+  }
+
+  if (property.type === "multi_select") {
+    return property.multi_select.map((option) => option.name);
+  }
+
+  return [];
+}
+
+/**
  * Converts one Notion page into our simple Article object.
  */
 function mapNotionPageToArticle(page: PageObjectResponse): Article {
@@ -172,6 +194,7 @@ function mapNotionPageToArticle(page: PageObjectResponse): Article {
       getSelectOrStatusName(page.properties, "Author"),
     publishedDate: getDateProperty(page.properties, "Published date"),
     lastReviewed: getDateProperty(page.properties, "Last reviewed"),
+    tags: getMultiSelectNames(page.properties, "Tags"),
   };
 }
 
@@ -342,4 +365,43 @@ export async function getArticleBlocks(
   }
 
   return blocksWithChildren;
+}
+
+/**
+ * Finds the previous (older) and next (newer) published articles
+ * around the current slug. Articles are expected newest-first.
+ */
+export function getAdjacentArticles(
+  articles: Article[],
+  currentSlug: string,
+): { previousArticle: Article | null; nextArticle: Article | null } {
+  const articlesWithSlug = articles.filter((article) => {
+    return article.slug !== "";
+  });
+
+  const currentIndex = articlesWithSlug.findIndex((article) => {
+    return article.slug === currentSlug;
+  });
+
+  if (currentIndex === -1) {
+    return {
+      previousArticle: null,
+      nextArticle: null,
+    };
+  }
+
+  // Newest-first list: a higher index is older → Previous.
+  const previousArticle =
+    currentIndex < articlesWithSlug.length - 1
+      ? articlesWithSlug[currentIndex + 1]
+      : null;
+
+  // A lower index is newer → Next.
+  const nextArticle =
+    currentIndex > 0 ? articlesWithSlug[currentIndex - 1] : null;
+
+  return {
+    previousArticle,
+    nextArticle,
+  };
 }
