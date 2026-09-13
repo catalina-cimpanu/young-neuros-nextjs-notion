@@ -1,10 +1,13 @@
-import { isFullDatabase, isFullPage } from "@notionhq/client";
-import type { PageObjectResponse } from "@notionhq/client";
+import { isFullBlock, isFullDatabase, isFullPage } from "@notionhq/client";
+import type {
+  BlockObjectResponse,
+  PageObjectResponse,
+} from "@notionhq/client";
 import { notion } from "./notion";
 
 /**
  * The shape we use inside the app for one Neuro Article.
- * This is listing data only — we do not load full Notion page content yet.
+ * Listing/detail properties only — page body is fetched separately.
  */
 export type Article = {
   id: string;
@@ -16,6 +19,13 @@ export type Article = {
   author: string;
   publishedDate: string | null;
   lastReviewed: string | null;
+};
+
+/**
+ * A Notion block plus optional nested children (for lists, etc.).
+ */
+export type ArticleBlock = BlockObjectResponse & {
+  children?: ArticleBlock[];
 };
 
 /**
@@ -251,4 +261,85 @@ export async function getPublishedArticleBySlug(
   }
 
   return null;
+}
+
+/**
+ * Fetches one page of Notion block children for a block or page id.
+ * Loops until every page of results is collected.
+ */
+async function listAllChildBlocks(
+  parentBlockId: string,
+): Promise<BlockObjectResponse[]> {
+  const blocks: BlockObjectResponse[] = [];
+  let cursor: string | undefined = undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await notion.blocks.children.list({
+      block_id: parentBlockId,
+      start_cursor: cursor,
+      page_size: 100,
+    });
+
+    for (const result of response.results) {
+      if (isFullBlock(result)) {
+        blocks.push(result);
+      }
+    }
+
+    hasMore = response.has_more;
+    if (response.next_cursor) {
+      cursor = response.next_cursor;
+    } else {
+      cursor = undefined;
+    }
+  }
+
+  return blocks;
+}
+
+/**
+ * True when we should load nested children for rendering
+ * (list items and toggles). Skip child pages/databases.
+ */
+function shouldFetchNestedChildren(block: BlockObjectResponse): boolean {
+  if (!block.has_children) {
+    return false;
+  }
+
+  if (
+    block.type === "bulleted_list_item" ||
+    block.type === "numbered_list_item" ||
+    block.type === "quote" ||
+    block.type === "toggle"
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Fetches Notion blocks for an article page, including nested list children.
+ * Returns a tree the ArticleBody component can render.
+ */
+export async function getArticleBlocks(
+  pageId: string,
+): Promise<ArticleBlock[]> {
+  const topLevelBlocks = await listAllChildBlocks(pageId);
+  const blocksWithChildren: ArticleBlock[] = [];
+
+  for (const block of topLevelBlocks) {
+    if (shouldFetchNestedChildren(block)) {
+      const childBlocks = await getArticleBlocks(block.id);
+      blocksWithChildren.push({
+        ...block,
+        children: childBlocks,
+      });
+    } else {
+      blocksWithChildren.push(block);
+    }
+  }
+
+  return blocksWithChildren;
 }

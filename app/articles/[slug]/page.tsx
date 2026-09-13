@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublishedArticleBySlug } from "@/lib/articles";
+import ArticleBody from "@/components/ArticleBody";
+import {
+  getArticleBlocks,
+  getPublishedArticleBySlug,
+} from "@/lib/articles";
 
 // Re-fetch Notion data at most once per hour (3600 seconds).
 export const revalidate = 3600;
 
 /**
  * Renders one published Neuro Article by slug.
- * Shows article properties only for now — full Notion page body comes later.
+ * Shows properties plus the Notion page body.
  * Example URL: /articles/first-steps-eeg
  */
 export default async function ArticleDetailPage({
@@ -21,6 +25,9 @@ export default async function ArticleDetailPage({
   if (!article) {
     notFound();
   }
+
+  // Load the Notion page body after we know the article exists.
+  const blocks = await getArticleBlocks(article.id);
 
   return (
     <main className="homepage">
@@ -62,6 +69,8 @@ export default async function ArticleDetailPage({
           Last reviewed: {article.lastReviewed}
         </p>
       ) : null}
+
+      <ArticleBody blocks={blocks} />
     </main>
   );
 }
