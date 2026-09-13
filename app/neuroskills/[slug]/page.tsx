@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GuidelineCard from "@/components/GuidelineCard";
 import ResourceCard from "@/components/ResourceCard";
-import { getPublishedGuidelinesForTopic } from "@/lib/guidelines";
+import {
+  getPublishedGuidelinesForTopic,
+} from "@/lib/guidelines";
+import { groupGuidelinesByRegion } from "@/lib/guideline-groups";
 import { getPublishedResourcesForTopic } from "@/lib/resources";
 import { getPublishedTopicBySlug } from "@/lib/topics";
 
@@ -44,6 +47,9 @@ export default async function NeuroskillTopicPage({
     return resource.resourceType !== "Link";
   });
 
+  // Topic pages: group guidelines by region only (filters stay on /guidelines).
+  const guidelineRegionGroups = groupGuidelinesByRegion(guidelines);
+
   return (
     <main className="homepage">
       <p className="text-sm">
@@ -83,24 +89,35 @@ export default async function NeuroskillTopicPage({
             No published guidelines linked to this topic yet.
           </p>
         ) : (
-          <ul className="mt-4 list-none space-y-4 p-0">
-            {guidelines.map((guideline) => (
-              <GuidelineCard
-                key={guideline.id}
-                name={guideline.name}
-                url={guideline.url}
-                organization={guideline.organization}
-                region={guideline.region}
-                language={guideline.language}
-                year={guideline.year}
-                guidelineType={guideline.guidelineType}
-                summary={guideline.summary}
-                lastReviewed={guideline.lastReviewed}
-                // On a topic page the topic is already clear, so hide Topics here.
-                topicNames={[]}
-              />
+          <div className="mt-4 space-y-8">
+            {guidelineRegionGroups.map((regionGroup) => (
+              <div key={regionGroup.regionLabel}>
+                <h3 className="text-base font-semibold text-neutral-800">
+                  {regionGroup.regionLabel}
+                </h3>
+
+                <ul className="mt-3 list-none space-y-4 p-0">
+                  {regionGroup.guidelines.map((guideline) => (
+                    <GuidelineCard
+                      key={guideline.id}
+                      name={guideline.name}
+                      url={guideline.url}
+                      organization={guideline.organization}
+                      // Region is already the subsection heading.
+                      region=""
+                      language={guideline.language}
+                      year={guideline.year}
+                      guidelineType={guideline.guidelineType}
+                      summary={guideline.summary}
+                      lastReviewed={guideline.lastReviewed}
+                      // On a topic page the topic is already clear, so hide Topics here.
+                      topicNames={[]}
+                    />
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 

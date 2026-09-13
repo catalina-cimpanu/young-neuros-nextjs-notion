@@ -1,6 +1,7 @@
 import { isFullDatabase, isFullPage } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client";
 import { notion } from "./notion";
+import { getPublishedTopics } from "./topics";
 
 /**
  * The shape we use inside the app for one Neuro Guideline.
@@ -17,6 +18,10 @@ export type Guideline = {
   guidelineType: string;
   summary: string;
   lastReviewed: string | null;
+  // Topics relation page IDs (used for filtering and cards).
+  topicIds: string[];
+  // Human-readable topic names resolved from published Neuro Topics.
+  topicNames: string[];
 };
 
 /**
@@ -189,7 +194,28 @@ function getDateProperty(
 }
 
 /**
+ * Reads a relation property as a list of related page IDs.
+ */
+function getRelationIds(
+  properties: PageObjectResponse["properties"],
+  propertyName: string,
+): string[] {
+  const property = properties[propertyName];
+
+  if (!property) {
+    return [];
+  }
+
+  if (property.type === "relation") {
+    return property.relation.map((relatedPage) => relatedPage.id);
+  }
+
+  return [];
+}
+
+/**
  * Converts one Notion page into our simple Guideline object.
+ * topicNames starts empty; fillTopicNames() adds readable names afterward.
  */
 function mapNotionPageToGuideline(page: PageObjectResponse): Guideline {
   return {
@@ -209,7 +235,37 @@ function mapNotionPageToGuideline(page: PageObjectResponse): Guideline {
     guidelineType: getSelectOrStatusName(page.properties, "Guideline type"),
     summary: getTextProperty(page.properties, "Summary"),
     lastReviewed: getDateProperty(page.properties, "Last reviewed"),
+    topicIds: getRelationIds(page.properties, "Topics"),
+    topicNames: [],
   };
+}
+
+/**
+ * Fills topicNames on each guideline by looking up published Neuro Topics.
+ */
+async function fillTopicNames(guidelines: Guideline[]): Promise<Guideline[]> {
+  const publishedTopics = await getPublishedTopics();
+
+  const topicNameById = new Map<string, string>();
+  for (const topic of publishedTopics) {
+    topicNameById.set(topic.id, topic.name);
+  }
+
+  return guidelines.map((guideline) => {
+    const topicNames: string[] = [];
+
+    for (const topicId of guideline.topicIds) {
+      const topicName = topicNameById.get(topicId);
+      if (topicName) {
+        topicNames.push(topicName);
+      }
+    }
+
+    return {
+      ...guideline,
+      topicNames,
+    };
+  });
 }
 
 /**
@@ -251,7 +307,7 @@ export async function getPublishedGuidelines(): Promise<Guideline[]> {
     }
   }
 
-  return guidelines;
+  return fillTopicNames(guidelines);
 }
 
 /**
@@ -303,5 +359,5 @@ export async function getPublishedGuidelinesForTopic(
     }
   }
 
-  return guidelines;
+  return fillTopicNames(guidelines);
 }
