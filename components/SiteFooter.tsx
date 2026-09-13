@@ -5,6 +5,7 @@ import Link from "next/link";
  * These match Site Pages slugs in Notion (Status = Published).
  */
 const footerLinks = [
+  { href: "/submit", label: "Submit" },
   { href: "/pages/terms", label: "Terms" },
   { href: "/pages/privacy", label: "Privacy" },
   { href: "/pages/cookies", label: "Cookie policy" },

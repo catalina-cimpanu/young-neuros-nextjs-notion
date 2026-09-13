@@ -14,6 +14,7 @@ export default function SiteHeader() {
     { href: "/guidelines", label: "Guidelines" },
     { href: "/calendar", label: "Calendar" },
     { href: "/articles", label: "Articles" },
+    { href: "/submit", label: "Submit" },
   ];
 
   return (
