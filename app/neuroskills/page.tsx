@@ -11,9 +11,9 @@ export const revalidate = 3600;
 export default async function NeuroskillsPage() {
   const topics = await getPublishedTopics();
 
-  // Keep only topics marked as Neuroskill in Notion.
+  // Keep only topics marked as Neuroskill in Notion, and only if they have a slug for linking.
   const neuroskills = topics.filter((topic) => {
-    return topic.topicType === "Neuroskill";
+    return topic.topicType === "Neuroskill" && topic.slug !== "";
   });
 
   return (
@@ -38,6 +38,7 @@ export default async function NeuroskillsPage() {
               shortDescription={neuroskill.shortDescription}
               residencyRelevance={neuroskill.residencyRelevance}
               lastReviewed={neuroskill.lastReviewed}
+              href={`/neuroskills/${neuroskill.slug}`}
             />
           ))}
         </ul>

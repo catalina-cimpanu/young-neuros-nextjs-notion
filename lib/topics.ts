@@ -224,3 +224,42 @@ export async function getPublishedTopics(): Promise<Topic[]> {
 
   return topics;
 }
+
+/**
+ * Fetches one published Neuro Topic by its Slug.
+ * Returns null if no matching published topic is found.
+ */
+export async function getPublishedTopicBySlug(
+  slug: string,
+): Promise<Topic | null> {
+  const dataSourceId = await getTopicsDataSourceId();
+
+  const response = await notion.dataSources.query({
+    data_source_id: dataSourceId,
+    page_size: 1,
+    filter: {
+      and: [
+        {
+          property: "Status",
+          status: {
+            equals: "Published",
+          },
+        },
+        {
+          property: "Slug",
+          rich_text: {
+            equals: slug,
+          },
+        },
+      ],
+    },
+  });
+
+  for (const result of response.results) {
+    if (isFullPage(result)) {
+      return mapNotionPageToTopic(result);
+    }
+  }
+
+  return null;
+}

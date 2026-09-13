@@ -11,9 +11,9 @@ export const revalidate = 3600;
 export default async function PathologiesPage() {
   const topics = await getPublishedTopics();
 
-  // Keep only topics marked as Pathology in Notion.
+  // Keep only topics marked as Pathology in Notion, and only if they have a slug for linking.
   const pathologies = topics.filter((topic) => {
-    return topic.topicType === "Pathology";
+    return topic.topicType === "Pathology" && topic.slug !== "";
   });
 
   return (
@@ -37,6 +37,7 @@ export default async function PathologiesPage() {
               shortDescription={pathology.shortDescription}
               residencyRelevance={pathology.residencyRelevance}
               lastReviewed={pathology.lastReviewed}
+              href={`/pathologies/${pathology.slug}`}
             />
           ))}
         </ul>
