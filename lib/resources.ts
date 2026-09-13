@@ -1,6 +1,7 @@
 import { isFullDatabase, isFullPage } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client";
 import { notion } from "./notion";
+import { getPublishedTopics } from "./topics";
 
 /**
  * The shape we use inside the app for one Neuro Resource.
@@ -11,13 +12,18 @@ export type Resource = {
   name: string;
   url: string;
   resourceType: string;
-  audience: string;
+  // Audience is a multi-select in Notion, so we keep every selected value.
+  audience: string[];
   language: string;
   sourceQuality: string;
   description: string;
   whyUseful: string;
   featured: boolean;
   lastChecked: string | null;
+  // Topics relation page IDs (used for filtering and grouping later).
+  topicIds: string[];
+  // Human-readable topic names resolved from published Neuro Topics.
+  topicNames: string[];
 };
 
 /**
@@ -191,7 +197,54 @@ function getDateProperty(
 }
 
 /**
+ * Reads a multi-select property as a list of option names.
+ * Also accepts a single select (one-item list) so older data still works.
+ */
+function getMultiSelectNames(
+  properties: PageObjectResponse["properties"],
+  propertyName: string,
+): string[] {
+  const property = properties[propertyName];
+
+  if (!property) {
+    return [];
+  }
+
+  if (property.type === "multi_select") {
+    return property.multi_select.map((option) => option.name);
+  }
+
+  // Fallback: if Notion still has a single select, wrap it in an array.
+  if (property.type === "select" && property.select) {
+    return [property.select.name];
+  }
+
+  return [];
+}
+
+/**
+ * Reads a relation property as a list of related page IDs.
+ */
+function getRelationIds(
+  properties: PageObjectResponse["properties"],
+  propertyName: string,
+): string[] {
+  const property = properties[propertyName];
+
+  if (!property) {
+    return [];
+  }
+
+  if (property.type === "relation") {
+    return property.relation.map((relatedPage) => relatedPage.id);
+  }
+
+  return [];
+}
+
+/**
  * Converts one Notion page into our simple Resource object.
+ * topicNames starts empty; fillTopicNames() adds readable names afterward.
  */
 function mapNotionPageToResource(page: PageObjectResponse): Resource {
   return {
@@ -199,10 +252,7 @@ function mapNotionPageToResource(page: PageObjectResponse): Resource {
     name: getTextProperty(page.properties, "Name"),
     url: getUrlProperty(page.properties, "URL"),
     resourceType: getSelectOrStatusName(page.properties, "Resource type"),
-    // Audience and language may be select or text in Notion — try both.
-    audience:
-      getSelectOrStatusName(page.properties, "Audience") ||
-      getTextProperty(page.properties, "Audience"),
+    audience: getMultiSelectNames(page.properties, "Audience"),
     language:
       getSelectOrStatusName(page.properties, "Language") ||
       getTextProperty(page.properties, "Language"),
@@ -213,7 +263,39 @@ function mapNotionPageToResource(page: PageObjectResponse): Resource {
     whyUseful: getTextProperty(page.properties, "Why useful"),
     featured: getCheckboxProperty(page.properties, "Featured"),
     lastChecked: getDateProperty(page.properties, "Last checked"),
+    topicIds: getRelationIds(page.properties, "Topics"),
+    topicNames: [],
   };
+}
+
+/**
+ * Fills topicNames on each resource by looking up published Neuro Topics.
+ * Uses topicIds from the Topics relation.
+ */
+async function fillTopicNames(resources: Resource[]): Promise<Resource[]> {
+  const publishedTopics = await getPublishedTopics();
+
+  // Map makes "find name by id" fast while we loop over resources.
+  const topicNameById = new Map<string, string>();
+  for (const topic of publishedTopics) {
+    topicNameById.set(topic.id, topic.name);
+  }
+
+  return resources.map((resource) => {
+    const topicNames: string[] = [];
+
+    for (const topicId of resource.topicIds) {
+      const topicName = topicNameById.get(topicId);
+      if (topicName) {
+        topicNames.push(topicName);
+      }
+    }
+
+    return {
+      ...resource,
+      topicNames,
+    };
+  });
 }
 
 /**
@@ -255,7 +337,8 @@ export async function getPublishedResources(): Promise<Resource[]> {
     }
   }
 
-  return resources;
+  // Resolve Topics relation IDs into readable names for cards and filters.
+  return fillTopicNames(resources);
 }
 
 /**
@@ -307,5 +390,5 @@ export async function getPublishedResourcesForTopic(
     }
   }
 
-  return resources;
+  return fillTopicNames(resources);
 }
