@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GuidelineCard from "@/components/GuidelineCard";
 import ResourceCard from "@/components/ResourceCard";
+import TopicContents, { topicSectionId } from "@/components/TopicContents";
 import {
   getPublishedGuidelinesForTopic,
 } from "@/lib/guidelines";
@@ -83,7 +84,20 @@ export default async function PathologyTopicPage({
         </p>
       ) : null}
 
-      <section className="mt-10" aria-labelledby="guidelines-heading">
+      <TopicContents
+        guidelineRegions={guidelineRegionGroups.map(
+          (regionGroup) => regionGroup.regionLabel,
+        )}
+        resourceTypes={resourceTypeGroups.map(
+          (typeGroup) => typeGroup.typeLabel,
+        )}
+      />
+
+      <section
+        id="guidelines"
+        className="mt-10"
+        aria-labelledby="guidelines-heading"
+      >
         <h2 id="guidelines-heading" className="text-lg font-semibold">
           Guidelines
         </h2>
@@ -95,7 +109,10 @@ export default async function PathologyTopicPage({
         ) : (
           <div className="mt-4 space-y-8">
             {guidelineRegionGroups.map((regionGroup) => (
-              <div key={regionGroup.regionLabel}>
+              <div
+                key={regionGroup.regionLabel}
+                id={topicSectionId("guidelines", regionGroup.regionLabel)}
+              >
                 <h3 className="text-base font-semibold text-neutral-800">
                   {regionGroup.regionLabel}
                 </h3>
@@ -125,7 +142,11 @@ export default async function PathologyTopicPage({
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="resources-heading">
+      <section
+        id="resources"
+        className="mt-10"
+        aria-labelledby="resources-heading"
+      >
         <h2 id="resources-heading" className="text-lg font-semibold">
           Resources
         </h2>
@@ -137,7 +158,10 @@ export default async function PathologyTopicPage({
         ) : (
           <div className="mt-4 space-y-8">
             {resourceTypeGroups.map((typeGroup) => (
-              <div key={typeGroup.typeLabel}>
+              <div
+                key={typeGroup.typeLabel}
+                id={topicSectionId("resources", typeGroup.typeLabel)}
+              >
                 <h3 className="text-base font-semibold text-neutral-800">
                   {typeGroup.typeLabel}
                 </h3>
@@ -167,7 +191,7 @@ export default async function PathologyTopicPage({
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="links-heading">
+      <section id="links" className="mt-10" aria-labelledby="links-heading">
         <h2 id="links-heading" className="text-lg font-semibold">
           Links
         </h2>
